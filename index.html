@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Architect Pro | Enterprise SQL IDE</title>
+    <meta name="description" content="Production-grade, multi-dialect SQL IDE with ER diagrams, advanced query patterns, and performance analysis.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+:root {
+  --bg-deep: #060a14;
+  --bg-base: #0a0e1a;
+  --bg-surface: rgba(15,23,42,0.75);
+  --bg-surface-hover: rgba(30,41,59,0.85);
+  --bg-elevated: rgba(30,41,59,0.6);
+  --border-subtle: rgba(99,102,241,0.12);
+  --border-active: rgba(99,102,241,0.4);
+  --border-glow: rgba(99,102,241,0.6);
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --secondary: #06b6d4;
+  --accent: #a855f7;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --glass-blur: blur(20px);
+  --shadow-glow: 0 0 30px rgba(99,102,241,0.08);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.04) 0%, transparent 50%);
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.4); }
+
+/* ─── Layout ─── */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky; top: 0; z-index: 100;
+}
+.app-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+}
+.app-logo i { -webkit-text-fill-color: var(--primary-light); font-size: 1.4rem; }
+.header-controls { display: flex; align-items: center; gap: 12px; }
+
+.app-main {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 0;
+  height: calc(100vh - 53px);
+}
+@media (max-width: 1024px) {
+  .app-main { grid-template-columns: 1fr; height: auto; }
+  .output-panel { height: 60vh; }
+}
+
+/* ─── Glass Card ─── */
+.glass {
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+.glass:hover { border-color: var(--border-active); }
+.glass-inner {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Tabs ─── */
+.tabs { display: flex; gap: 2px; padding: 4px; background: rgba(15,23,42,0.5); border-radius: var(--radius-sm); }
+.tab-btn {
+  padding: 8px 16px; border: none; background: transparent;
+  color: var(--text-muted); font-family: var(--font-ui); font-size: 0.85rem; font-weight: 500;
+  border-radius: var(--radius-xs); cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-secondary); background: rgba(99,102,241,0.08); }
+.tab-btn.active {
+  color: var(--primary-light); background: rgba(99,102,241,0.15);
+  box-shadow: 0 0 12px rgba(99,102,241,0.1);
+}
+.tab-content { display: none !important; }
+.tab-content.active { display: block !important; }
+.tab-content.active.flex-col { display: flex !important; }
+
+/* ─── Form Controls ─── */
+.form-input, .form-select {
+  width: 100%; padding: 8px 12px;
+  background: rgba(15,23,42,0.6); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs); color: var(--text-primary);
+  font-family: var(--font-ui); font-size: 0.85rem;
+  transition: var(--transition); outline: none;
+}
+.form-input:focus, .form-select:focus {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+.form-input::placeholder { color: var(--text-muted); }
+.form-select option { background: #1e293b; color: var(--text-primary); }
+.form-label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+.form-check {
+  width: 16px; height: 16px; accent-color: var(--primary);
+  cursor: pointer; border-radius: 3px;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: none; border-radius: var(--radius-xs);
+  font-family: var(--font-ui); font-size: 0.85rem; font-weight: 500;
+  cursor: pointer; transition: var(--transition); white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white; box-shadow: 0 2px 12px rgba(99,102,241,0.3);
+}
+.btn-primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,0.45); transform: translateY(-1px); }
+.btn-secondary { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-subtle); }
+.btn-secondary:hover { border-color: var(--border-active); color: var(--text-primary); }
+.btn-success { background: linear-gradient(135deg, #059669, var(--success)); color: white; }
+.btn-danger { background: rgba(239,68,68,0.15); color: var(--error); border: 1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+.btn-icon { padding: 6px 8px; background: transparent; color: var(--text-muted); border: none; cursor: pointer; border-radius: var(--radius-xs); transition: var(--transition); }
+.btn-icon:hover { color: var(--text-primary); background: rgba(99,102,241,0.1); }
+.btn-icon.danger:hover { color: var(--error); background: rgba(239,68,68,0.1); }
+
+/* ─── Dialect Selector ─── */
+.dialect-selector {
+  display: flex; gap: 4px; padding: 3px;
+  background: rgba(15,23,42,0.6); border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+.dialect-btn {
+  padding: 6px 12px; border: none; background: transparent;
+  color: var(--text-muted); font-family: var(--font-ui); font-size: 0.78rem; font-weight: 500;
+  border-radius: var(--radius-xs); cursor: pointer; transition: var(--transition);
+}
+.dialect-btn:hover { color: var(--text-secondary); }
+.dialect-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white; box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+
+/* ─── Workspace ─── */
+.workspace { overflow-y: auto; padding: 16px; }
+.output-panel {
+  border-left: 1px solid var(--border-subtle);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ─── Table Card ─── */
+.table-card {
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); overflow: hidden; transition: var(--transition);
+  margin-bottom: 12px;
+}
+.table-card:hover { border-color: var(--border-active); }
+.table-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: rgba(99,102,241,0.06);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.table-card-header input {
+  background: transparent; border: none; color: var(--primary-light);
+  font-weight: 600; font-size: 0.95rem; font-family: var(--font-mono);
+  outline: none; flex: 1;
+}
+.table-card-header input::placeholder { color: var(--text-muted); }
+.table-card-body { padding: 8px; }
+.col-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 30px 30px 1.2fr 30px 50px 30px;
+  gap: 4px; align-items: center; padding: 4px 6px;
+  border-radius: var(--radius-xs); font-size: 0.8rem;
+}
+.col-grid:hover { background: rgba(99,102,241,0.04); }
+.col-grid-header {
+  color: var(--text-muted); font-weight: 600; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 6px 2px;
+  border-bottom: 1px solid var(--border-subtle); margin-bottom: 2px;
+}
+.col-grid input[type="text"] {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-primary); padding: 4px 6px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 0.8rem; outline: none; width: 100%;
+}
+.col-grid input[type="text"]:focus { border-color: var(--border-active); }
+.col-grid select {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-secondary); padding: 4px 2px; border-radius: 4px;
+  font-size: 0.78rem; outline: none; cursor: pointer; width: 100%;
+}
+.col-grid select:focus { border-color: var(--border-active); }
+.col-grid select option { background: #1e293b; }
+
+/* ─── FK Badge ─── */
+.fk-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.25); border-radius: 12px;
+  font-size: 0.7rem; color: var(--accent); cursor: pointer;
+}
+.fk-config {
+  display: none; padding: 10px; margin: 4px 6px 8px;
+  background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.15);
+  border-radius: var(--radius-xs);
+}
+.fk-config.visible { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ─── Code Editor ─── */
+.code-editor {
+  flex: 1; display: flex; flex-direction: row; overflow: hidden;
+  background: rgba(10,14,26,0.9); border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle); font-family: var(--font-mono);
+  font-size: 0.82rem; line-height: 1.7;
+}
+.line-numbers {
+  padding: 12px 8px; text-align: right; color: var(--text-muted);
+  background: rgba(15,23,42,0.5); border-right: 1px solid var(--border-subtle);
+  user-select: none; min-width: 44px; overflow-y: hidden; overflow-x: hidden;
+  white-space: pre; flex-shrink: 0;
+}
+.code-content {
+  flex: 1; padding: 12px 16px; overflow: auto; white-space: pre;
+  word-wrap: break-word; min-width: 0;
+}
+.code-toolbar {
+  display: flex; gap: 6px; padding: 8px 0;
+}
+.sql-kw { color: #818cf8; font-weight: 600; }
+.sql-fn { color: #22d3ee; }
+.sql-tbl { color: #34d399; }
+.sql-col { color: #c084fc; }
+.sql-str { color: #fb923c; }
+.sql-num { color: #4ade80; }
+.sql-cmt { color: #64748b; font-style: italic; }
+.sql-op { color: #f59e0b; }
+.sql-type { color: #f472b6; }
+
+/* ─── Analysis Panel ─── */
+.analysis-card {
+  padding: 12px; margin-bottom: 8px;
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.analysis-card h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.analysis-item {
+  padding: 6px 8px; margin: 4px 0; font-size: 0.78rem;
+  border-radius: var(--radius-xs); color: var(--text-secondary);
+}
+.analysis-item.good { background: rgba(34,197,94,0.08); border-left: 3px solid var(--success); }
+.analysis-item.warn { background: rgba(245,158,11,0.08); border-left: 3px solid var(--warning); }
+.analysis-item.bad { background: rgba(239,68,68,0.08); border-left: 3px solid var(--error); }
+.analysis-item.info { background: rgba(99,102,241,0.08); border-left: 3px solid var(--primary); }
+
+/* ─── Join Card ─── */
+.join-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; margin: 6px 0;
+  background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.15);
+  border-radius: var(--radius-sm); font-size: 0.82rem;
+}
+.join-card .join-text span { color: var(--accent); font-weight: 500; }
+.join-card .join-kw { color: var(--primary-light); font-weight: 600; }
+
+/* ─── ER Canvas ─── */
+#erCanvas {
+  width: 100%; border-radius: var(--radius-sm);
+  background: rgba(10,14,26,0.6); border: 1px solid var(--border-subtle);
+  cursor: grab;
+}
+#erCanvas:active { cursor: grabbing; }
+
+/* ─── Query Pattern Cards ─── */
+.pattern-card {
+  padding: 14px; margin-bottom: 10px;
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+}
+.pattern-card:hover { border-color: var(--border-active); transform: translateX(4px); }
+.pattern-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.pattern-card p { font-size: 0.78rem; color: var(--text-muted); }
+.pattern-config {
+  display: none; padding: 12px; margin-top: 10px;
+  background: rgba(15,23,42,0.4); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+}
+.pattern-config.visible { display: block; }
+
+/* ─── Section Headers ─── */
+.section-title {
+  font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.section-title i { color: var(--primary); font-size: 0.9rem; }
+
+/* ─── Badge ─── */
+.badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 10px; font-size: 0.7rem; font-weight: 600;
+}
+.badge-primary { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+.badge-success { background: rgba(34,197,94,0.15); color: var(--success); }
+.badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+
+/* ─── Animations ─── */
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+.animate-in { animation: fadeIn 0.3s ease forwards; }
+.animate-slide { animation: slideIn 0.3s ease forwards; }
+
+/* ─── Utility ─── */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mb-2 { margin-bottom: 8px; }
+.p-3 { padding: 12px; }
+.p-4 { padding: 16px; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.hidden { display: none !important; }
+.shrink-0 { flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="app-header">
+    <div class="app-logo">
+        <i class="fas fa-cubes"></i>
+        <span>SQL Architect Pro</span>
+    </div>
+    <div class="header-controls">
+        <div class="dialect-selector" id="dialectSelector">
+            <button class="dialect-btn active" data-dialect="postgresql">🐘 PostgreSQL</button>
+            <button class="dialect-btn" data-dialect="tsql">🔷 T-SQL</button>
+            <button class="dialect-btn" data-dialect="snowflake">❄️ Snowflake</button>
+            <button class="dialect-btn" data-dialect="oracle">🔴 Oracle</button>
+            <button class="dialect-btn" data-dialect="bigquery">🔵 BigQuery</button>
+        </div>
+        <button class="btn btn-danger btn-sm" id="resetAllBtn"><i class="fas fa-trash-alt"></i> Reset</button>
+    </div>
+</header>
+
+<!-- ═══ MAIN LAYOUT ═══ -->
+<div class="app-main">
+    <!-- ─── LEFT: WORKSPACE ─── -->
+    <div class="workspace" id="workspace">
+        <div class="tabs mb-2" id="mainTabs">
+            <button class="tab-btn active" data-tab="schema"><i class="fas fa-table"></i> Schema Designer</button>
+            <button class="tab-btn" data-tab="patterns"><i class="fas fa-brain"></i> Query Patterns</button>
+            <button class="tab-btn" data-tab="joins"><i class="fas fa-project-diagram"></i> Relationships</button>
+            <button class="tab-btn" data-tab="erdiagram"><i class="fas fa-sitemap"></i> ER Diagram</button>
+        </div>
+
+        <!-- TAB: Schema Designer -->
+        <div class="tab-content active" id="tab-schema">
+            <div class="flex items-center justify-between mb-2">
+                <div class="section-title"><i class="fas fa-table"></i> Tables</div>
+                <button class="btn btn-primary btn-sm" id="addTableBtn"><i class="fas fa-plus"></i> Add Table</button>
+            </div>
+            <div id="tablesContainer"></div>
+        </div>
+
+        <!-- TAB: Query Patterns -->
+        <div class="tab-content" id="tab-patterns">
+            <div class="section-title mb-2"><i class="fas fa-brain"></i> Advanced Query Patterns</div>
+            <div id="patternsList">
+                <div class="pattern-card" data-pattern="recursive-cte">
+                    <h3><i class="fas fa-sitemap" style="color:var(--secondary)"></i> Recursive CTE <span class="badge badge-primary">Hierarchical</span></h3>
+                    <p>Generate recursive Common Table Expressions for tree/hierarchical data traversal with depth tracking and cycle detection.</p>
+                    <div class="pattern-config" id="config-recursive-cte">
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Table</label><select class="form-select pattern-table" id="cteTbl"></select></div>
+                            <div style="flex:1"><label class="form-label">ID Column</label><select class="form-select" id="cteId"></select></div>
+                            <div style="flex:1"><label class="form-label">Parent Column</label><select class="form-select" id="cteParent"></select></div>
+                        </div>
+                        <div class="mb-2"><label class="form-label">Display Column</label><select class="form-select" id="cteDisplay"></select></div>
+                        <button class="btn btn-primary btn-sm" id="genCteBtn"><i class="fas fa-play"></i> Generate</button>
+                    </div>
+                </div>
+                <div class="pattern-card" data-pattern="window-fn">
+                    <h3><i class="fas fa-chart-bar" style="color:var(--accent)"></i> Window Functions <span class="badge badge-primary">Analytics</span></h3>
+                    <p>ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, running totals with configurable PARTITION BY and ORDER BY.</p>
+                    <div class="pattern-config" id="config-window-fn">
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Table</label><select class="form-select pattern-table" id="winTbl"></select></div>
+                            <div style="flex:1"><label class="form-label">Function</label>
+                                <select class="form-select" id="winFn">
+                                    <option value="ROW_NUMBER">ROW_NUMBER()</option>
+                                    <option value="RANK">RANK()</option>
+                                    <option value="DENSE_RANK">DENSE_RANK()</option>
+                                    <option value="LAG">LAG()</option>
+                                    <option value="LEAD">LEAD()</option>
+                                    <option value="SUM">SUM() Running Total</option>
+                                    <option value="AVG">AVG() Moving Average</option>
+                                    <option value="NTILE">NTILE()</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Partition By</label><select class="form-select" id="winPartition"></select></div>
+                            <div style="flex:1"><label class="form-label">Order By</label><select class="form-select" id="winOrder"></select></div>
+                            <div style="flex:1"><label class="form-label">Value Column</label><select class="form-select" id="winValue"></select></div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="genWinBtn"><i class="fas fa-play"></i> Generate</button>
+                    </div>
+                </div>
+                <div class="pattern-card" data-pattern="lateral-join">
+                    <h3><i class="fas fa-arrows-alt-h" style="color:var(--success)"></i> Lateral Join / CROSS APPLY <span class="badge badge-success">Set-Based</span></h3>
+                    <p>Generate Top-N per group patterns using LATERAL (PostgreSQL/Snowflake) or CROSS APPLY (T-SQL).</p>
+                    <div class="pattern-config" id="config-lateral-join">
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Outer Table</label><select class="form-select pattern-table" id="latOuter"></select></div>
+                            <div style="flex:1"><label class="form-label">Inner Table</label><select class="form-select pattern-table" id="latInner"></select></div>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Join Column (Outer)</label><select class="form-select" id="latOuterCol"></select></div>
+                            <div style="flex:1"><label class="form-label">Join Column (Inner)</label><select class="form-select" id="latInnerCol"></select></div>
+                            <div style="flex:1"><label class="form-label">Top N</label><input class="form-input" type="number" id="latTopN" value="3" min="1" max="100"></div>
+                        </div>
+                        <div class="mb-2"><label class="form-label">Order Inner By</label><select class="form-select" id="latOrderCol"></select></div>
+                        <button class="btn btn-primary btn-sm" id="genLatBtn"><i class="fas fa-play"></i> Generate</button>
+                    </div>
+                </div>
+                <div class="pattern-card" data-pattern="upsert">
+                    <h3><i class="fas fa-sync-alt" style="color:var(--warning)"></i> UPSERT / MERGE <span class="badge badge-warning">DML</span></h3>
+                    <p>INSERT ON CONFLICT (PostgreSQL), MERGE INTO (T-SQL/Oracle/Snowflake/BigQuery) with proper conflict resolution.</p>
+                    <div class="pattern-config" id="config-upsert">
+                        <div class="flex gap-2 mb-2">
+                            <div style="flex:1"><label class="form-label">Target Table</label><select class="form-select pattern-table" id="upsertTbl"></select></div>
+                            <div style="flex:1"><label class="form-label">Conflict/Match Column</label><select class="form-select" id="upsertConflict"></select></div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="genUpsertBtn"><i class="fas fa-play"></i> Generate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Relationships / Joins -->
+        <div class="tab-content" id="tab-joins">
+            <div class="section-title mb-2"><i class="fas fa-project-diagram"></i> Table Relationships</div>
+            <div class="glass-inner p-3 mb-2">
+                <div class="flex gap-2 mb-2" style="flex-wrap:wrap;">
+                    <div style="flex:1;min-width:120px"><label class="form-label">Table 1</label><select class="form-select" id="joinTable1"></select></div>
+                    <div style="flex:1;min-width:120px"><label class="form-label">Join Type</label>
+                        <select class="form-select" id="joinType">
+                            <option value="INNER JOIN">INNER JOIN</option>
+                            <option value="LEFT JOIN">LEFT JOIN</option>
+                            <option value="RIGHT JOIN">RIGHT JOIN</option>
+                            <option value="FULL OUTER JOIN">FULL OUTER JOIN</option>
+                            <option value="CROSS JOIN">CROSS JOIN</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;min-width:120px"><label class="form-label">Table 2</label><select class="form-select" id="joinTable2"></select></div>
+                </div>
+                <div class="flex gap-2 mb-2" id="joinKeyRow">
+                    <div style="flex:1"><label class="form-label">Key from Table 1</label><select class="form-select" id="joinKey1"></select></div>
+                    <div style="flex:0;display:flex;align-items:flex-end;padding-bottom:4px"><span style="color:var(--text-muted)">=</span></div>
+                    <div style="flex:1"><label class="form-label">Key from Table 2</label><select class="form-select" id="joinKey2"></select></div>
+                </div>
+                <button class="btn btn-primary btn-sm" id="addJoinBtn"><i class="fas fa-link"></i> Add Relationship</button>
+            </div>
+            <div id="joinsList"></div>
+        </div>
+
+        <!-- TAB: ER Diagram -->
+        <div class="tab-content" id="tab-erdiagram">
+            <div class="flex items-center justify-between mb-2">
+                <div class="section-title"><i class="fas fa-sitemap"></i> Entity-Relationship Diagram</div>
+                <button class="btn btn-secondary btn-sm" id="autoLayoutBtn"><i class="fas fa-magic"></i> Auto Layout</button>
+            </div>
+            <canvas id="erCanvas" height="500"></canvas>
+        </div>
+    </div>
+
+    <!-- ─── RIGHT: OUTPUT PANEL ─── -->
+    <div class="output-panel">
+        <div class="tabs shrink-0" style="margin:8px 8px 0" id="outputTabs">
+            <button class="tab-btn active" data-tab="output-sql"><i class="fas fa-code"></i> SQL Output</button>
+            <button class="tab-btn" data-tab="output-analysis"><i class="fas fa-microscope"></i> Analysis</button>
+        </div>
+
+        <!-- SQL Output -->
+        <div class="tab-content active flex-col" id="tab-output-sql" style="flex:1;padding:8px;overflow:hidden;">
+            <div class="code-toolbar shrink-0">
+                <button class="btn btn-primary btn-sm" id="generateSqlBtn"><i class="fas fa-play-circle"></i> Generate SQL</button>
+                <button class="btn btn-secondary btn-sm" id="copySqlBtn"><i class="fas fa-copy"></i> Copy</button>
+                <button class="btn btn-success btn-sm" id="downloadSqlBtn"><i class="fas fa-download"></i> Download</button>
+            </div>
+            <div class="code-editor" style="flex:1;min-height:0;">
+                <div class="line-numbers" id="lineNumbers">1</div>
+                <div class="code-content" id="sqlOutput"><span class="sql-cmt">-- Your SQL code will appear here...\n-- Select a dialect and design your schema above.</span></div>
+            </div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="tab-content" id="tab-output-analysis" style="padding:8px;overflow-y:auto;">
+            <div id="analysisContainer">
+                <div class="analysis-card">
+                    <h4><i class="fas fa-info-circle" style="color:var(--primary)"></i> Ready</h4>
+                    <div class="analysis-item info">Generate SQL to see execution plan predictions, performance recommendations, and security analysis.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   SQL ARCHITECT PRO — JavaScript Engine
+   ══════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+/* ─── DIALECT CONFIGURATIONS ─── */
+const DIALECTS = {
+  postgresql: {
+    name: 'PostgreSQL', label: '🐘 PostgreSQL',
+    quote: id => `"${id}"`,
+    autoInc: () => 'GENERATED ALWAYS AS IDENTITY',
+    autoIncInline: true,
+    types: { INT:'INTEGER', BIGINT:'BIGINT', SMALLINT:'SMALLINT', FLOAT:'DOUBLE PRECISION', 'DECIMAL(10,2)':'NUMERIC(10,2)',
+      'VARCHAR(255)':'VARCHAR(255)', TEXT:'TEXT', BOOLEAN:'BOOLEAN', DATE:'DATE', DATETIME:'TIMESTAMP',
+      TIMESTAMP:'TIMESTAMPTZ', BLOB:'BYTEA', JSON:'JSONB', UUID:'UUID', SERIAL:'SERIAL' },
+    indexTypes: ['BTREE','HASH','GIN','GIST','BRIN'],
+    upsert: 'ON CONFLICT', lateral: 'LATERAL', cteKeyword: 'RECURSIVE',
+    term: ';', batchSep: '', supportsBool: true
+  },
+  tsql: {
+    name: 'T-SQL (SQL Server)', label: '🔷 T-SQL',
+    quote: id => `[${id}]`,
+    autoInc: () => 'IDENTITY(1,1)',
+    autoIncInline: true,
+    types: { INT:'INT', BIGINT:'BIGINT', SMALLINT:'SMALLINT', FLOAT:'FLOAT', 'DECIMAL(10,2)':'DECIMAL(10,2)',
+      'VARCHAR(255)':'NVARCHAR(255)', TEXT:'NVARCHAR(MAX)', BOOLEAN:'BIT', DATE:'DATE', DATETIME:'DATETIME2',
+      TIMESTAMP:'DATETIMEOFFSET', BLOB:'VARBINARY(MAX)', JSON:'NVARCHAR(MAX)', UUID:'UNIQUEIDENTIFIER', SERIAL:'INT' },
+    indexTypes: ['CLUSTERED','NONCLUSTERED','COLUMNSTORE'],
+    upsert: 'MERGE', lateral: 'CROSS APPLY', cteKeyword: '',
+    term: ';', batchSep: '\nGO\n', supportsBool: false
+  },
+  snowflake: {
+    name: 'Snowflake', label: '❄️ Snowflake',
+    quote: id => `"${id.toUpperCase()}"`,
+    autoInc: () => 'AUTOINCREMENT',
+    autoIncInline: true,
+    types: { INT:'INTEGER', BIGINT:'BIGINT', SMALLINT:'SMALLINT', FLOAT:'FLOAT', 'DECIMAL(10,2)':'NUMBER(10,2)',
+      'VARCHAR(255)':'VARCHAR(255)', TEXT:'STRING', BOOLEAN:'BOOLEAN', DATE:'DATE', DATETIME:'TIMESTAMP_NTZ',
+      TIMESTAMP:'TIMESTAMP_TZ', BLOB:'BINARY', JSON:'VARIANT', UUID:'VARCHAR(36)', SERIAL:'INTEGER' },
+    indexTypes: [],
+    upsert: 'MERGE', lateral: 'LATERAL', cteKeyword: 'RECURSIVE',
+    term: ';', batchSep: '', supportsBool: true
+  },
+  oracle: {
+    name: 'Oracle', label: '🔴 Oracle',
+    quote: id => `"${id}"`,
+    autoInc: () => 'GENERATED ALWAYS AS IDENTITY',
+    autoIncInline: true,
+    types: { INT:'NUMBER(10)', BIGINT:'NUMBER(19)', SMALLINT:'NUMBER(5)', FLOAT:'BINARY_FLOAT', 'DECIMAL(10,2)':'NUMBER(10,2)',
+      'VARCHAR(255)':'VARCHAR2(255)', TEXT:'CLOB', BOOLEAN:'NUMBER(1)', DATE:'DATE', DATETIME:'TIMESTAMP',
+      TIMESTAMP:'TIMESTAMP WITH TIME ZONE', BLOB:'BLOB', JSON:'CLOB', UUID:'RAW(16)', SERIAL:'NUMBER(10)' },
+    indexTypes: ['BTREE','BITMAP','FUNCTION-BASED'],
+    upsert: 'MERGE', lateral: 'LATERAL', cteKeyword: 'RECURSIVE',
+    term: ';', batchSep: '\n/\n', supportsBool: false
+  },
+  bigquery: {
+    name: 'BigQuery', label: '🔵 BigQuery',
+    quote: id => '`' + id + '`',
+    autoInc: () => '',
+    autoIncInline: false,
+    types: { INT:'INT64', BIGINT:'INT64', SMALLINT:'INT64', FLOAT:'FLOAT64', 'DECIMAL(10,2)':'NUMERIC',
+      'VARCHAR(255)':'STRING', TEXT:'STRING', BOOLEAN:'BOOL', DATE:'DATE', DATETIME:'DATETIME',
+      TIMESTAMP:'TIMESTAMP', BLOB:'BYTES', JSON:'JSON', UUID:'STRING', SERIAL:'INT64' },
+    indexTypes: [],
+    upsert: 'MERGE', lateral: '', cteKeyword: 'RECURSIVE',
+    term: ';', batchSep: '', supportsBool: true
+  }
+};
+
+const GENERIC_TYPES = ['INT','BIGINT','SMALLINT','FLOAT','DECIMAL(10,2)','VARCHAR(255)','TEXT','BOOLEAN','DATE','DATETIME','TIMESTAMP','BLOB','JSON','UUID','SERIAL'];
+const CASCADE_OPTIONS = ['NO ACTION','CASCADE','SET NULL','SET DEFAULT','RESTRICT'];
+
+/* ─── APPLICATION STATE ─── */
+const state = {
+  dialect: 'postgresql',
+  tables: [],
+  joins: [],
+  nextTableId: 1,
+  erPositions: {},
+  erDragging: null,
+  erOffset: {x:0,y:0},
+  lastSQL: '',
+  lastSQLraw: ''
+};
+
+/* ─── HELPERS ─── */
+const D = () => DIALECTS[state.dialect];
+const QI = id => D().quote(id);
+const MT = genericType => D().types[genericType] || genericType;
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+function findTable(name) { return state.tables.find(t => t.name === name); }
+function findTableById(id) { return state.tables.find(t => t.id === id); }
+
+function uid() { return '_' + Math.random().toString(36).substr(2,9); }
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+/* ─── SQL SYNTAX HIGHLIGHTER ─── */
+function highlightSQL(raw) {
+  const keywords = ['SELECT','FROM','WHERE','AND','OR','NOT','IN','EXISTS','BETWEEN','LIKE','IS','NULL',
+    'INSERT','INTO','VALUES','UPDATE','SET','DELETE','CREATE','TABLE','ALTER','ADD','DROP','COLUMN',
+    'INDEX','ON','PRIMARY','KEY','FOREIGN','REFERENCES','CONSTRAINT','UNIQUE','CHECK','DEFAULT',
+    'NOT NULL','AUTO_INCREMENT','IDENTITY','AUTOINCREMENT','GENERATED','ALWAYS','AS',
+    'JOIN','INNER','LEFT','RIGHT','FULL','OUTER','CROSS','APPLY','LATERAL','NATURAL',
+    'ORDER','BY','GROUP','HAVING','LIMIT','OFFSET','FETCH','NEXT','ROWS','ONLY','TOP',
+    'UNION','ALL','INTERSECT','EXCEPT','MINUS',
+    'CASE','WHEN','THEN','ELSE','END','CAST','COALESCE','NULLIF','ISNULL',
+    'WITH','RECURSIVE','AS','CTE',
+    'OVER','PARTITION','ROW_NUMBER','RANK','DENSE_RANK','NTILE','LAG','LEAD','FIRST_VALUE','LAST_VALUE',
+    'SUM','AVG','COUNT','MIN','MAX','ROW',
+    'MERGE','MATCHED','USING','SOURCE','TARGET','CONFLICT','DO','NOTHING',
+    'IF','BEGIN','DECLARE','RETURN','PROCEDURE','FUNCTION','TRIGGER','VIEW',
+    'CASCADE','RESTRICT','ACTION','CLUSTER','GRANT','REVOKE','COMMIT','ROLLBACK',
+    'ASC','DESC','DISTINCT','HAVING','TEMPORARY','TEMP','TRUNCATE','REPLACE',
+    'SERIAL','NUMBER','VARCHAR2','NVARCHAR','CLOB','BYTEA','JSONB','VARIANT','INT64','FLOAT64','STRING','BOOL',
+    'TIMESTAMP','TIMESTAMPTZ','DATETIME2','DATETIMEOFFSET','TIMESTAMP_NTZ','TIMESTAMP_TZ','GO'];
+  const fnWords = ['ROW_NUMBER','RANK','DENSE_RANK','NTILE','LAG','LEAD','FIRST_VALUE','LAST_VALUE','SUM','AVG','COUNT','MIN','MAX','COALESCE','NULLIF','ISNULL','CAST','NVL','DECODE','GREATEST','LEAST'];
+  const typeWords = ['INTEGER','INT','BIGINT','SMALLINT','FLOAT','DOUBLE PRECISION','DECIMAL','NUMERIC','VARCHAR','NVARCHAR','TEXT','BOOLEAN','BIT','DATE','DATETIME','TIMESTAMP','BLOB','JSON','JSONB','UUID','SERIAL','NUMBER','VARCHAR2','CLOB','BYTEA','VARIANT','INT64','FLOAT64','STRING','BOOL','BYTES','RAW','BINARY_FLOAT','BINARY','NVARCHAR\\(MAX\\)','VARBINARY\\(MAX\\)','UNIQUEIDENTIFIER','TIMESTAMP WITH TIME ZONE','DATETIME2','DATETIMEOFFSET','TIMESTAMP_NTZ','TIMESTAMP_TZ'];
+
+  let html = escHtml(raw);
+  // Comments
+  html = html.replace(/(--[^\n]*)/g, '<span class="sql-cmt">$1</span>');
+  // Strings
+  html = html.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="sql-str">$1</span>');
+  // Numbers
+  html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="sql-num">$1</span>');
+  // Type words (before keywords to avoid conflicts)
+  typeWords.forEach(tw => {
+    const re = new RegExp('\\b(' + tw + '(?:\\([^)]*\\))?)\\b', 'gi');
+    html = html.replace(re, '<span class="sql-type">$1</span>');
+  });
+  // Functions
+  fnWords.forEach(fw => {
+    const re = new RegExp('\\b(' + fw + ')\\s*\\(', 'gi');
+    html = html.replace(re, '<span class="sql-fn">$1</span>(');
+  });
+  // Keywords
+  keywords.forEach(kw => {
+    const re = new RegExp('\\b(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'gi');
+    html = html.replace(re, (m) => {
+      // Don't re-wrap if already in a span
+      return '<span class="sql-kw">' + m + '</span>';
+    });
+  });
+  return html;
+}
+
+function updateLineNumbers(raw) {
+  const lines = raw.split('\n');
+  const ln = $('lineNumbers');
+  ln.innerHTML = lines.map((_, i) => i + 1).join('\n');
+}
+
+function setSQLOutput(rawSQL) {
+  state.lastSQLraw = rawSQL;
+  state.lastSQL = rawSQL;
+  $('sqlOutput').innerHTML = highlightSQL(rawSQL);
+  updateLineNumbers(rawSQL);
+}
+
+/* ─── TAB SYSTEM ─── */
+function initTabs(containerSel, contentPrefix) {
+  const btns = document.querySelectorAll(containerSel + ' .tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = btn.dataset.tab;
+      document.querySelectorAll('[id^="' + contentPrefix + '"]').forEach(tc => {
+        if (tc.id === contentPrefix + tabId) {
+          tc.classList.add('active');
+        } else {
+          tc.classList.remove('active');
+        }
+      });
+      if (tabId === 'erdiagram') renderER();
+    });
+  });
+}
+
+/* ─── DIALECT SWITCHER ─── */
+function initDialectSelector() {
+  $$('#dialectSelector .dialect-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#dialectSelector .dialect-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.dialect = btn.dataset.dialect;
+    });
+  });
+}
+
+/* ─── POPULATE TABLE SELECTS ─── */
+function populateTableSelects() {
+  const selects = ['joinTable1','joinTable2','cteTbl','winTbl','latOuter','latInner','upsertTbl'];
+  selects.forEach(sid => {
+    const sel = $(sid);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Select table...</option>';
+    state.tables.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.name; o.textContent = t.name;
+      sel.appendChild(o);
+    });
+    if (prev && state.tables.find(t => t.name === prev)) sel.value = prev;
+  });
+}
+
+function populateColumnSelect(selectEl, tableName) {
+  selectEl.innerHTML = '<option value="">Select column...</option>';
+  const tbl = findTable(tableName);
+  if (!tbl) return;
+  tbl.columns.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.name; o.textContent = c.name;
+    selectEl.appendChild(o);
+  });
+}
+
+// Wire up table selects that drive column selects
+function wirePatternTableLinks() {
+  const links = [
+    {tbl:'cteTbl', cols:['cteId','cteParent','cteDisplay']},
+    {tbl:'winTbl', cols:['winPartition','winOrder','winValue']},
+    {tbl:'latOuter', cols:['latOuterCol']},
+    {tbl:'latInner', cols:['latInnerCol','latOrderCol']},
+    {tbl:'upsertTbl', cols:['upsertConflict']},
+    {tbl:'joinTable1', cols:['joinKey1']},
+    {tbl:'joinTable2', cols:['joinKey2']}
+  ];
+  links.forEach(({tbl, cols}) => {
+    const el = $(tbl);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      cols.forEach(cid => populateColumnSelect($(cid), el.value));
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   SCHEMA DESIGNER — Table & Column Management
+   ══════════════════════════════════════════════ */
+
+function addTable() {
+  const id = state.nextTableId++;
+  const tbl = {
+    id, name: 'table_' + id,
+    columns: [
+      { id: uid(), name: 'id', type: 'INT', isPK: true, allowNull: false,
+        defaultValue: '', autoIncrement: true, isUnique: false, checkExpr: '',
+        fk: null }
+    ],
+    indexes: []
+  };
+  state.tables.push(tbl);
+  state.erPositions[id] = { x: 60 + ((id-1) % 3) * 260, y: 40 + Math.floor((id-1)/3) * 220 };
+  renderTableCard(tbl);
+  populateTableSelects();
+}
+
+function renderTableCard(tbl) {
+  const card = document.createElement('div');
+  card.className = 'table-card animate-in';
+  card.dataset.tableId = tbl.id;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'table-card-header';
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text'; nameIn.value = tbl.name; nameIn.placeholder = 'table_name';
+  nameIn.addEventListener('change', () => { tbl.name = nameIn.value; populateTableSelects(); });
+  const actions = document.createElement('div');
+  actions.className = 'flex gap-2';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn-icon danger'; delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+  delBtn.title = 'Delete table';
+  delBtn.addEventListener('click', () => {
+    state.tables = state.tables.filter(t => t.id !== tbl.id);
+    state.joins = state.joins.filter(j => j.table1 !== tbl.name && j.table2 !== tbl.name);
+    delete state.erPositions[tbl.id];
+    card.remove();
+    populateTableSelects();
+    renderJoinsList();
+  });
+  actions.appendChild(delBtn);
+  hdr.appendChild(nameIn);
+  hdr.appendChild(actions);
+  card.appendChild(hdr);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'table-card-body';
+
+  // Column header row
+  const colHdr = document.createElement('div');
+  colHdr.className = 'col-grid col-grid-header';
+  colHdr.innerHTML = '<span>Column</span><span>Type</span><span title="Primary Key">PK</span><span title="Allow NULL">N</span><span>Default</span><span title="Auto Increment">AI</span><span title="Foreign Key">FK</span><span></span>';
+  body.appendChild(colHdr);
+
+  // Column rows container
+  const colsDiv = document.createElement('div');
+  colsDiv.className = 'columns-container';
+  colsDiv.dataset.tableId = tbl.id;
+  body.appendChild(colsDiv);
+
+  tbl.columns.forEach(col => renderColumnRow(col, colsDiv, tbl));
+
+  // Add column button
+  const addColBtn = document.createElement('button');
+  addColBtn.className = 'btn btn-secondary btn-sm w-full mt-2';
+  addColBtn.innerHTML = '<i class="fas fa-plus"></i> Add Column';
+  addColBtn.addEventListener('click', () => {
+    const col = { id: uid(), name: 'column_' + (tbl.columns.length+1), type: 'VARCHAR(255)',
+      isPK: false, allowNull: true, defaultValue: '', autoIncrement: false,
+      isUnique: false, checkExpr: '', fk: null };
+    tbl.columns.push(col);
+    renderColumnRow(col, colsDiv, tbl);
+  });
+  body.appendChild(addColBtn);
+
+  // Index section (collapsed by default)
+  const idxToggle = document.createElement('button');
+  idxToggle.className = 'btn btn-secondary btn-sm w-full mt-2';
+  idxToggle.innerHTML = '<i class="fas fa-bolt"></i> Indexes (' + tbl.indexes.length + ')';
+  const idxDiv = document.createElement('div');
+  idxDiv.className = 'hidden';
+  idxDiv.style.marginTop = '8px';
+  idxToggle.addEventListener('click', () => {
+    idxDiv.classList.toggle('hidden');
+    idxToggle.innerHTML = '<i class="fas fa-bolt"></i> Indexes (' + tbl.indexes.length + ') ' + (idxDiv.classList.contains('hidden') ? '' : '▾');
+  });
+  body.appendChild(idxToggle);
+  body.appendChild(idxDiv);
+
+  // Add index form
+  const addIdxRow = document.createElement('div');
+  addIdxRow.className = 'flex gap-2 mt-2';
+  addIdxRow.innerHTML = '<input class="form-input" placeholder="idx_name" style="flex:1"><select class="form-select" style="flex:1"><option value="BTREE">B-Tree</option><option value="HASH">Hash</option><option value="GIN">GIN</option><option value="GIST">GiST</option></select><input class="form-input" placeholder="col1, col2" style="flex:2"><button class="btn btn-primary btn-sm"><i class="fas fa-plus"></i></button>';
+  addIdxRow.querySelector('button').addEventListener('click', () => {
+    const inputs = addIdxRow.querySelectorAll('input, select');
+    const idxName = inputs[0].value || 'idx_' + tbl.name + '_' + (tbl.indexes.length+1);
+    const idxType = inputs[1].value;
+    const idxCols = inputs[2].value.split(',').map(s => s.trim()).filter(Boolean);
+    if (idxCols.length === 0) return;
+    const idx = { name: idxName, type: idxType, columns: idxCols, isUnique: false };
+    tbl.indexes.push(idx);
+    renderIndexItem(idx, idxDiv, tbl);
+    idxToggle.innerHTML = '<i class="fas fa-bolt"></i> Indexes (' + tbl.indexes.length + ') ▾';
+    inputs[0].value = ''; inputs[2].value = '';
+  });
+  idxDiv.appendChild(addIdxRow);
+
+  tbl.indexes.forEach(idx => renderIndexItem(idx, idxDiv, tbl));
+
+  card.appendChild(body);
+  $('tablesContainer').appendChild(card);
+}
+
+function renderIndexItem(idx, container, tbl) {
+  const item = document.createElement('div');
+  item.className = 'flex items-center justify-between p-3 glass-inner mt-2';
+  item.innerHTML = '<span style="font-size:0.78rem;color:var(--text-secondary)"><i class="fas fa-bolt" style="color:var(--warning);margin-right:4px"></i>' +
+    escHtml(idx.name) + ' <span class="badge badge-primary">' + idx.type + '</span> (' + idx.columns.join(', ') + ')</span>';
+  const del = document.createElement('button');
+  del.className = 'btn-icon danger'; del.innerHTML = '<i class="fas fa-times"></i>';
+  del.addEventListener('click', () => { tbl.indexes = tbl.indexes.filter(i => i !== idx); item.remove(); });
+  item.appendChild(del);
+  container.appendChild(item);
+}
+
+function renderColumnRow(col, container, tbl) {
+  const row = document.createElement('div');
+  row.className = 'col-grid';
+
+  // Name
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text'; nameIn.value = col.name; nameIn.placeholder = 'col_name';
+  nameIn.addEventListener('change', () => { col.name = nameIn.value; });
+
+  // Type
+  const typeSel = document.createElement('select');
+  GENERIC_TYPES.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    if (t === col.type) o.selected = true;
+    typeSel.appendChild(o);
+  });
+  typeSel.addEventListener('change', () => { col.type = typeSel.value; });
+
+  // PK
+  const pkChk = document.createElement('input');
+  pkChk.type = 'checkbox'; pkChk.className = 'form-check'; pkChk.checked = col.isPK;
+  pkChk.title = 'Primary Key';
+  pkChk.addEventListener('change', () => { col.isPK = pkChk.checked; });
+
+  // Null
+  const nullChk = document.createElement('input');
+  nullChk.type = 'checkbox'; nullChk.className = 'form-check'; nullChk.checked = col.allowNull;
+  nullChk.title = 'Allow NULL';
+  nullChk.addEventListener('change', () => { col.allowNull = nullChk.checked; });
+
+  // Default
+  const defIn = document.createElement('input');
+  defIn.type = 'text'; defIn.value = col.defaultValue; defIn.placeholder = 'NULL';
+  defIn.addEventListener('change', () => { col.defaultValue = defIn.value; });
+
+  // Auto Increment
+  const aiChk = document.createElement('input');
+  aiChk.type = 'checkbox'; aiChk.className = 'form-check'; aiChk.checked = col.autoIncrement;
+  aiChk.title = 'Auto Increment';
+  aiChk.addEventListener('change', () => { col.autoIncrement = aiChk.checked; });
+
+  // FK button
+  const fkBtn = document.createElement('button');
+  fkBtn.className = col.fk ? 'fk-badge' : 'btn-icon';
+  fkBtn.innerHTML = col.fk ? '<i class="fas fa-key"></i>' : '<i class="fas fa-key" style="opacity:0.3"></i>';
+  fkBtn.title = 'Foreign Key';
+  const fkPanel = document.createElement('div');
+  fkPanel.className = 'fk-config';
+
+  fkBtn.addEventListener('click', () => {
+    fkPanel.classList.toggle('visible');
+    if (fkPanel.classList.contains('visible')) populateFKPanel(fkPanel, col, tbl);
+  });
+
+  // Delete
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn-icon danger'; delBtn.innerHTML = '<i class="fas fa-times"></i>';
+  delBtn.addEventListener('click', () => {
+    tbl.columns = tbl.columns.filter(c => c.id !== col.id);
+    row.remove(); fkPanel.remove();
+  });
+
+  row.appendChild(nameIn);
+  row.appendChild(typeSel);
+  row.appendChild(pkChk);
+  row.appendChild(nullChk);
+  row.appendChild(defIn);
+  row.appendChild(aiChk);
+  row.appendChild(fkBtn);
+  row.appendChild(delBtn);
+
+  container.appendChild(row);
+  container.appendChild(fkPanel);
+}
+
+function populateFKPanel(panel, col, tbl) {
+  panel.innerHTML = '';
+  // Ref table
+  const d1 = document.createElement('div');
+  d1.innerHTML = '<label class="form-label">Ref Table</label>';
+  const refTblSel = document.createElement('select');
+  refTblSel.className = 'form-select';
+  refTblSel.innerHTML = '<option value="">None</option>';
+  state.tables.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.name; o.textContent = t.name;
+    if (col.fk && col.fk.table === t.name) o.selected = true;
+    refTblSel.appendChild(o);
+  });
+  d1.appendChild(refTblSel);
+
+  // Ref column
+  const d2 = document.createElement('div');
+  d2.innerHTML = '<label class="form-label">Ref Column</label>';
+  const refColSel = document.createElement('select');
+  refColSel.className = 'form-select';
+  d2.appendChild(refColSel);
+
+  // On Delete
+  const d3 = document.createElement('div');
+  d3.innerHTML = '<label class="form-label">On Delete</label>';
+  const onDelSel = document.createElement('select');
+  onDelSel.className = 'form-select';
+  CASCADE_OPTIONS.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    if (col.fk && col.fk.onDelete === o) opt.selected = true;
+    onDelSel.appendChild(opt);
+  });
+  d3.appendChild(onDelSel);
+
+  // Save button
+  const d4 = document.createElement('div');
+  d4.style.display = 'flex'; d4.style.gap = '4px'; d4.style.alignItems = 'flex-end';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary btn-sm'; saveBtn.textContent = 'Set FK';
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'btn btn-danger btn-sm'; clearBtn.textContent = 'Clear';
+  d4.appendChild(saveBtn); d4.appendChild(clearBtn);
+
+  const fillRefCols = () => {
+    refColSel.innerHTML = '<option value="">Select...</option>';
+    const rt = findTable(refTblSel.value);
+    if (!rt) return;
+    rt.columns.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.name; o.textContent = c.name;
+      if (col.fk && col.fk.column === c.name) o.selected = true;
+      refColSel.appendChild(o);
+    });
+  };
+  refTblSel.addEventListener('change', fillRefCols);
+  fillRefCols();
+
+  saveBtn.addEventListener('click', () => {
+    if (refTblSel.value && refColSel.value) {
+      col.fk = { table: refTblSel.value, column: refColSel.value, onDelete: onDelSel.value, onUpdate: 'NO ACTION' };
+      panel.classList.remove('visible');
+      // Update FK button appearance
+      const fkBtn = panel.previousElementSibling.querySelector('.btn-icon, .fk-badge') || panel.previousElementSibling.lastElementChild;
+    }
+  });
+  clearBtn.addEventListener('click', () => { col.fk = null; panel.classList.remove('visible'); });
+
+  panel.appendChild(d1); panel.appendChild(d2); panel.appendChild(d3); panel.appendChild(d4);
+}
+
+/* ══════════════════════════════════════════════
+   SQL GENERATORS
+   ══════════════════════════════════════════════ */
+
+function generateDDL() {
+  let sql = '-- ═══════════════════════════════════════\n';
+  sql += '-- Generated by SQL Architect Pro\n';
+  sql += '-- Dialect: ' + D().name + '\n';
+  sql += '-- Generated: ' + new Date().toISOString() + '\n';
+  sql += '-- ═══════════════════════════════════════\n\n';
+
+  state.tables.forEach(tbl => {
+    sql += generateCreateTable(tbl) + '\n';
+  });
+
+  // Indexes (separate for PostgreSQL/Oracle, inline for T-SQL)
+  state.tables.forEach(tbl => {
+    tbl.indexes.forEach(idx => {
+      sql += generateCreateIndex(idx, tbl) + '\n';
+    });
+  });
+
+  // JOIN queries
+  if (state.joins.length > 0) {
+    sql += '\n-- ═══ JOIN Queries ═══\n\n';
+    state.joins.forEach(join => {
+      sql += generateJoinQuery(join) + '\n\n';
+    });
+  }
+
+  return sql;
+}
+
+function generateCreateTable(tbl) {
+  const d = D();
+  let sql = 'CREATE TABLE ' + QI(tbl.name) + ' (\n';
+  const lines = [];
+  const pks = tbl.columns.filter(c => c.isPK);
+  const fks = tbl.columns.filter(c => c.fk);
+
+  tbl.columns.forEach(col => {
+    let line = '    ' + QI(col.name) + ' ' + MT(col.type);
+    if (col.autoIncrement && d.autoIncInline) {
+      if (state.dialect === 'tsql') {
+        line += ' ' + d.autoInc();
+      } else if (state.dialect === 'bigquery') {
+        // BigQuery doesn't support auto increment
+      } else {
+        line += ' ' + d.autoInc();
+      }
+    }
+    if (!col.allowNull) line += ' NOT NULL';
+    if (col.defaultValue) line += ' DEFAULT ' + col.defaultValue;
+    if (col.isUnique) line += ' UNIQUE';
+    if (col.checkExpr) line += ' CHECK (' + col.checkExpr + ')';
+    lines.push(line);
+  });
+
+  // Composite PK constraint
+  if (pks.length > 0) {
+    if (state.dialect !== 'bigquery') {
+      lines.push('    CONSTRAINT pk_' + tbl.name + ' PRIMARY KEY (' + pks.map(c => QI(c.name)).join(', ') + ')');
+    }
+  }
+
+  // FK constraints
+  fks.forEach(col => {
+    let fkLine = '    CONSTRAINT fk_' + tbl.name + '_' + col.name +
+      ' FOREIGN KEY (' + QI(col.name) + ') REFERENCES ' + QI(col.fk.table) + ' (' + QI(col.fk.column) + ')';
+    if (col.fk.onDelete && col.fk.onDelete !== 'NO ACTION') fkLine += ' ON DELETE ' + col.fk.onDelete;
+    if (col.fk.onUpdate && col.fk.onUpdate !== 'NO ACTION') fkLine += ' ON UPDATE ' + col.fk.onUpdate;
+    if (state.dialect !== 'bigquery') lines.push(fkLine);
+  });
+
+  sql += lines.join(',\n');
+  sql += '\n)' + d.term + '\n';
+  return sql;
+}
+
+function generateCreateIndex(idx, tbl) {
+  const d = D();
+  if (d.indexTypes.length === 0) return '-- Indexes not supported in ' + d.name + ' (skipping ' + idx.name + ')';
+  let sql = 'CREATE';
+  if (idx.isUnique) sql += ' UNIQUE';
+  sql += ' INDEX ' + QI(idx.name) + ' ON ' + QI(tbl.name);
+  if (state.dialect === 'postgresql') {
+    sql += ' USING ' + idx.type;
+  }
+  sql += ' (' + idx.columns.map(c => QI(c)).join(', ') + ')' + d.term;
+  return sql;
+}
+
+function generateJoinQuery(join) {
+  const d = D();
+  return 'SELECT\n    ' + QI(join.table1) + '.*,\n    ' + QI(join.table2) + '.*\nFROM ' + QI(join.table1) +
+    '\n' + join.joinType + ' ' + QI(join.table2) +
+    '\n    ON ' + QI(join.table1) + '.' + QI(join.key1) + ' = ' + QI(join.table2) + '.' + QI(join.key2) + d.term;
+}
+
+/* ─── ADVANCED PATTERNS ─── */
+
+function generateRecursiveCTE() {
+  const d = D();
+  const tblName = $('cteTbl').value;
+  const idCol = $('cteId').value;
+  const parentCol = $('cteParent').value;
+  const displayCol = $('cteDisplay').value;
+  if (!tblName || !idCol || !parentCol) return '';
+  const t = QI(tblName), id = QI(idCol), par = QI(parentCol), disp = displayCol ? QI(displayCol) : id;
+
+  let sql = '-- Recursive CTE: Hierarchical Traversal of ' + tblName + '\n';
+  const recKw = d.cteKeyword ? d.cteKeyword + ' ' : '';
+  sql += 'WITH ' + recKw + 'hierarchy AS (\n';
+  sql += '    -- Anchor: root nodes (no parent)\n';
+  sql += '    SELECT\n';
+  sql += '        ' + id + ',\n';
+  sql += '        ' + par + ',\n';
+  sql += '        ' + disp + ',\n';
+  sql += '        0 AS depth,\n';
+  if (state.dialect === 'postgresql' || state.dialect === 'oracle') {
+    sql += '        CAST(' + disp + ' AS VARCHAR(4000)) AS path\n';
+  } else if (state.dialect === 'tsql') {
+    sql += '        CAST(' + disp + ' AS NVARCHAR(4000)) AS path\n';
+  } else {
+    sql += '        CAST(' + disp + ' AS STRING) AS path\n';
+  }
+  sql += '    FROM ' + t + '\n';
+  sql += '    WHERE ' + par + ' IS NULL\n\n';
+  sql += '    UNION ALL\n\n';
+  sql += '    -- Recursive: traverse children\n';
+  sql += '    SELECT\n';
+  sql += '        child.' + id + ',\n';
+  sql += '        child.' + par + ',\n';
+  sql += '        child.' + disp + ',\n';
+  sql += '        h.depth + 1,\n';
+  sql += '        h.path || \' > \' || child.' + disp + '\n';
+  sql += '    FROM ' + t + ' child\n';
+  sql += '    INNER JOIN hierarchy h ON child.' + par + ' = h.' + id + '\n';
+  if (state.dialect === 'tsql') {
+    sql += '    WHERE h.depth < 100  -- Cycle prevention\n';
+  }
+  sql += ')\n';
+  sql += 'SELECT * FROM hierarchy\nORDER BY path' + d.term;
+  return sql;
+}
+
+function generateWindowFunction() {
+  const d = D();
+  const tblName = $('winTbl').value;
+  const fn = $('winFn').value;
+  const partCol = $('winPartition').value;
+  const orderCol = $('winOrder').value;
+  const valCol = $('winValue').value;
+  if (!tblName || !orderCol) return '';
+  const t = QI(tblName);
+
+  let sql = '-- Window Function: ' + fn + ' over ' + tblName + '\n';
+  sql += 'SELECT\n    *,\n    ';
+  const part = partCol ? 'PARTITION BY ' + QI(partCol) + ' ' : '';
+  const ord = 'ORDER BY ' + QI(orderCol);
+  const overClause = 'OVER (' + part + ord + ')';
+
+  switch (fn) {
+    case 'ROW_NUMBER': sql += 'ROW_NUMBER() ' + overClause + ' AS row_num'; break;
+    case 'RANK': sql += 'RANK() ' + overClause + ' AS rank_num'; break;
+    case 'DENSE_RANK': sql += 'DENSE_RANK() ' + overClause + ' AS dense_rank_num'; break;
+    case 'NTILE': sql += 'NTILE(4) ' + overClause + ' AS quartile'; break;
+    case 'LAG': sql += 'LAG(' + QI(valCol || orderCol) + ', 1) ' + overClause + ' AS prev_value'; break;
+    case 'LEAD': sql += 'LEAD(' + QI(valCol || orderCol) + ', 1) ' + overClause + ' AS next_value'; break;
+    case 'SUM': sql += 'SUM(' + QI(valCol || orderCol) + ') ' + overClause.replace(ord, ord + ' ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW') + ' AS running_total'; break;
+    case 'AVG': sql += 'AVG(' + QI(valCol || orderCol) + ') ' + overClause.replace(ord, ord + ' ROWS BETWEEN 2 PRECEDING AND CURRENT ROW') + ' AS moving_avg'; break;
+  }
+  sql += '\nFROM ' + t + d.term;
+  return sql;
+}
+
+function generateLateralJoin() {
+  const d = D();
+  const outerTbl = $('latOuter').value;
+  const innerTbl = $('latInner').value;
+  const outerCol = $('latOuterCol').value;
+  const innerCol = $('latInnerCol').value;
+  const orderCol = $('latOrderCol').value;
+  const topN = parseInt($('latTopN').value) || 3;
+  if (!outerTbl || !innerTbl || !outerCol || !innerCol) return '';
+
+  let sql = '-- Top-N Per Group: ' + topN + ' from ' + innerTbl + ' per ' + outerTbl + '\n';
+
+  if (state.dialect === 'tsql') {
+    sql += 'SELECT o.*, sub.*\nFROM ' + QI(outerTbl) + ' o\nCROSS APPLY (\n';
+    sql += '    SELECT TOP ' + topN + ' *\n';
+    sql += '    FROM ' + QI(innerTbl) + ' i\n';
+    sql += '    WHERE i.' + QI(innerCol) + ' = o.' + QI(outerCol) + '\n';
+    if (orderCol) sql += '    ORDER BY i.' + QI(orderCol) + ' DESC\n';
+    sql += ') sub' + d.term;
+  } else if (state.dialect === 'bigquery') {
+    sql += 'SELECT o.*, sub.*\nFROM ' + QI(outerTbl) + ' o\nINNER JOIN (\n';
+    sql += '    SELECT *, ROW_NUMBER() OVER (PARTITION BY ' + QI(innerCol) + ' ORDER BY ' + QI(orderCol || innerCol) + ' DESC) AS rn\n';
+    sql += '    FROM ' + QI(innerTbl) + '\n';
+    sql += ') sub ON sub.' + QI(innerCol) + ' = o.' + QI(outerCol) + ' AND sub.rn <= ' + topN + d.term;
+  } else {
+    const latKw = d.lateral || 'LATERAL';
+    sql += 'SELECT o.*, sub.*\nFROM ' + QI(outerTbl) + ' o\nLEFT JOIN ' + latKw + ' (\n';
+    sql += '    SELECT *\n';
+    sql += '    FROM ' + QI(innerTbl) + ' i\n';
+    sql += '    WHERE i.' + QI(innerCol) + ' = o.' + QI(outerCol) + '\n';
+    if (orderCol) sql += '    ORDER BY i.' + QI(orderCol) + ' DESC\n';
+    sql += '    LIMIT ' + topN + '\n';
+    sql += ') sub ON TRUE' + d.term;
+  }
+  return sql;
+}
+
+function generateUpsert() {
+  const d = D();
+  const tblName = $('upsertTbl').value;
+  const conflictCol = $('upsertConflict').value;
+  if (!tblName || !conflictCol) return '';
+  const tbl = findTable(tblName);
+  if (!tbl) return '';
+  const cols = tbl.columns.map(c => c.name);
+  const nonKeyC = cols.filter(c => c !== conflictCol);
+
+  let sql = '-- UPSERT / MERGE: ' + tblName + '\n';
+
+  if (state.dialect === 'postgresql') {
+    sql += 'INSERT INTO ' + QI(tblName) + ' (' + cols.map(QI).join(', ') + ')\n';
+    sql += 'VALUES (' + cols.map((_, i) => '$' + (i+1)).join(', ') + ')\n';
+    sql += 'ON CONFLICT (' + QI(conflictCol) + ') DO UPDATE SET\n';
+    sql += nonKeyC.map(c => '    ' + QI(c) + ' = EXCLUDED.' + QI(c)).join(',\n');
+    sql += d.term;
+  } else {
+    // MERGE syntax for T-SQL, Oracle, Snowflake, BigQuery
+    sql += 'MERGE INTO ' + QI(tblName) + ' AS target\n';
+    sql += 'USING (SELECT ' + cols.map(c => (state.dialect==='tsql' ? '@' : ':') + 'p_' + c + ' AS ' + QI(c)).join(', ') + ') AS source\n';
+    sql += '    ON target.' + QI(conflictCol) + ' = source.' + QI(conflictCol) + '\n';
+    sql += 'WHEN MATCHED THEN UPDATE SET\n';
+    sql += nonKeyC.map(c => '    target.' + QI(c) + ' = source.' + QI(c)).join(',\n') + '\n';
+    sql += 'WHEN NOT MATCHED THEN INSERT (' + cols.map(QI).join(', ') + ')\n';
+    sql += '    VALUES (' + cols.map(c => 'source.' + QI(c)).join(', ') + ')' + d.term;
+  }
+  return sql;
+}
+
+/* ══════════════════════════════════════════════
+   ANALYSIS ENGINE
+   ══════════════════════════════════════════════ */
+
+function runAnalysis() {
+  const items = [];
+  const d = D();
+
+  // Check tables
+  if (state.tables.length === 0) {
+    items.push({ type: 'info', icon: 'fa-info-circle', title: 'No Schema', text: 'Design a schema to see analysis.' });
+    renderAnalysis(items);
+    return;
+  }
+
+  // PK analysis
+  state.tables.forEach(tbl => {
+    const pks = tbl.columns.filter(c => c.isPK);
+    if (pks.length === 0) {
+      items.push({ type: 'warn', icon: 'fa-exclamation-triangle', title: 'Missing PK: ' + tbl.name, text: 'Table has no primary key. Consider adding one for data integrity and query optimization.' });
+    } else if (pks.length > 1) {
+      items.push({ type: 'info', icon: 'fa-key', title: 'Composite PK: ' + tbl.name, text: 'Composite PK on (' + pks.map(c=>c.name).join(', ') + '). Ensure join order matches PK order for optimal index usage.' });
+    }
+    // NULL on PK
+    pks.forEach(pk => {
+      if (pk.allowNull) items.push({ type: 'bad', icon: 'fa-bug', title: 'Nullable PK: ' + tbl.name + '.' + pk.name, text: 'Primary key columns must not allow NULL.' });
+    });
+  });
+
+  // FK / Join analysis
+  state.joins.forEach(join => {
+    const t1 = findTable(join.table1), t2 = findTable(join.table2);
+    if (t1 && t2) {
+      const c1 = t1.columns.find(c => c.name === join.key1);
+      const c2 = t2.columns.find(c => c.name === join.key2);
+      if (c1 && c2 && c1.type !== c2.type) {
+        items.push({ type: 'warn', icon: 'fa-exchange-alt', title: 'Type Mismatch in JOIN', text: join.table1 + '.' + join.key1 + ' (' + c1.type + ') ≠ ' + join.table2 + '.' + join.key2 + ' (' + c2.type + '). Implicit conversion kills SARGability.' });
+      }
+      // Predict join type
+      const key1HasIdx = t1.indexes.some(i => i.columns.includes(join.key1)) || (c1 && c1.isPK);
+      const key2HasIdx = t2.indexes.some(i => i.columns.includes(join.key2)) || (c2 && c2.isPK);
+      if (key1HasIdx && key2HasIdx) {
+        items.push({ type: 'good', icon: 'fa-check-circle', title: 'Merge Join Eligible', text: join.table1 + ' ↔ ' + join.table2 + ': Both keys indexed. Optimizer will likely choose Merge Join for large datasets.' });
+      } else if (key1HasIdx || key2HasIdx) {
+        items.push({ type: 'info', icon: 'fa-info-circle', title: 'Nested Loop / Hash Join', text: join.table1 + ' ↔ ' + join.table2 + ': One key indexed. Consider indexing ' + (!key1HasIdx ? join.key1 : join.key2) + ' for Merge Join.' });
+      } else {
+        items.push({ type: 'warn', icon: 'fa-exclamation-triangle', title: 'Hash Join (No Indexes)', text: join.table1 + ' ↔ ' + join.table2 + ': No indexes on join keys. Hash Join is expensive for large tables.' });
+      }
+    }
+  });
+
+  // Index recommendations
+  state.tables.forEach(tbl => {
+    const fkCols = tbl.columns.filter(c => c.fk);
+    fkCols.forEach(col => {
+      const hasIdx = tbl.indexes.some(i => i.columns[0] === col.name) || col.isPK;
+      if (!hasIdx) {
+        items.push({ type: 'warn', icon: 'fa-bolt', title: 'Missing FK Index', text: 'FK column ' + tbl.name + '.' + col.name + ' has no index. This will cause full table scans on JOINs. Recommend B-Tree index.' });
+      }
+    });
+  });
+
+  // Security
+  items.push({ type: 'good', icon: 'fa-shield-alt', title: 'Parameterized Queries', text: 'All generated DML uses parameter placeholders ($1, @param, :param) — no string concatenation. SQL injection safe.' });
+
+  // Dialect-specific
+  if (state.dialect === 'bigquery') {
+    items.push({ type: 'info', icon: 'fa-cloud', title: 'BigQuery Note', text: 'BigQuery is append-optimized. No traditional indexes. Optimize via partitioning (PARTITION BY) and clustering (CLUSTER BY).' });
+  }
+  if (state.dialect === 'snowflake') {
+    items.push({ type: 'info', icon: 'fa-snowflake', title: 'Snowflake Note', text: 'Consider CLUSTER BY on frequently filtered columns. Snowflake auto-manages micro-partitions.' });
+  }
+
+  if (items.length === 0) {
+    items.push({ type: 'good', icon: 'fa-check-circle', title: 'Schema Looks Good', text: 'No issues detected. Schema follows best practices.' });
+  }
+  renderAnalysis(items);
+}
+
+function renderAnalysis(items) {
+  const c = $('analysisContainer');
+  c.innerHTML = '';
+  const sections = { good: [], info: [], warn: [], bad: [] };
+  items.forEach(i => (sections[i.type] || sections.info).push(i));
+
+  const labels = { bad: '🔴 Critical Issues', warn: '🟡 Warnings', info: '🔵 Recommendations', good: '🟢 Passed Checks' };
+  ['bad','warn','info','good'].forEach(type => {
+    if (sections[type].length === 0) return;
+    const card = document.createElement('div');
+    card.className = 'analysis-card animate-in';
+    card.innerHTML = '<h4>' + labels[type] + '</h4>';
+    sections[type].forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'analysis-item ' + item.type;
+      el.innerHTML = '<strong>' + escHtml(item.title) + '</strong><br>' + escHtml(item.text);
+      card.appendChild(el);
+    });
+    c.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ER DIAGRAM — Canvas Renderer
+   ══════════════════════════════════════════════ */
+
+function renderER() {
+  const canvas = $('erCanvas');
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  canvas.width = container.clientWidth;
+  canvas.height = Math.max(500, state.tables.length * 120);
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = container.clientWidth * dpr;
+  canvas.height = Math.max(500, state.tables.length * 120) * dpr;
+  canvas.style.width = container.clientWidth + 'px';
+  canvas.style.height = Math.max(500, state.tables.length * 120) + 'px';
+  ctx.scale(dpr, dpr);
+
+  // Background
+  ctx.fillStyle = 'rgba(10,14,26,0.6)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Grid dots
+  ctx.fillStyle = 'rgba(99,102,241,0.08)';
+  for (let x = 0; x < container.clientWidth; x += 30) {
+    for (let y = 0; y < canvas.height/dpr; y += 30) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (state.tables.length === 0) {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Add tables in Schema Designer to see the ER diagram', container.clientWidth/2, 250);
+    return;
+  }
+
+  // Draw FK relationship lines first (behind tables)
+  ctx.lineWidth = 2;
+  state.tables.forEach(tbl => {
+    const pos = state.erPositions[tbl.id] || {x:50, y:50};
+    tbl.columns.forEach((col, ci) => {
+      if (!col.fk) return;
+      const refTbl = state.tables.find(t => t.name === col.fk.table);
+      if (!refTbl) return;
+      const refPos = state.erPositions[refTbl.id] || {x:50, y:50};
+      const refCI = refTbl.columns.findIndex(c => c.name === col.fk.column);
+
+      const x1 = pos.x + 220;
+      const y1 = pos.y + 36 + ci * 22;
+      const x2 = refPos.x;
+      const y2 = refPos.y + 36 + (refCI >= 0 ? refCI : 0) * 22;
+
+      // Bezier curve
+      ctx.strokeStyle = 'rgba(168,85,247,0.5)';
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const cpx = (x1 + x2) / 2;
+      ctx.bezierCurveTo(cpx + 40, y1, cpx - 40, y2, x2, y2);
+      ctx.stroke();
+
+      // Arrow head at target
+      ctx.fillStyle = 'rgba(168,85,247,0.7)';
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - 8, y2 - 5);
+      ctx.lineTo(x2 - 8, y2 + 5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Crow's foot at source (many side)
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 + 8, y1 - 5);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 + 8, y1 + 5);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 + 10, y1);
+      ctx.stroke();
+    });
+  });
+
+  // Also draw join lines
+  state.joins.forEach(join => {
+    const t1 = state.tables.find(t => t.name === join.table1);
+    const t2 = state.tables.find(t => t.name === join.table2);
+    if (!t1 || !t2) return;
+    const p1 = state.erPositions[t1.id] || {x:50,y:50};
+    const p2 = state.erPositions[t2.id] || {x:50,y:50};
+    const ci1 = t1.columns.findIndex(c => c.name === join.key1);
+    const ci2 = t2.columns.findIndex(c => c.name === join.key2);
+
+    const x1 = p1.x + 220, y1 = p1.y + 36 + (ci1>=0?ci1:0)*22;
+    const x2 = p2.x, y2 = p2.y + 36 + (ci2>=0?ci2:0)*22;
+
+    ctx.strokeStyle = 'rgba(6,182,212,0.4)';
+    ctx.setLineDash([6,4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo((x1+x2)/2+30, y1, (x1+x2)/2-30, y2, x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Draw table boxes
+  state.tables.forEach(tbl => {
+    const pos = state.erPositions[tbl.id] || {x:50, y:50};
+    const w = 220;
+    const h = 30 + tbl.columns.length * 22 + 8;
+
+    // Table card shadow
+    ctx.shadowColor = 'rgba(99,102,241,0.15)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
+
+    // Table body
+    ctx.fillStyle = 'rgba(30,41,59,0.9)';
+    ctx.strokeStyle = 'rgba(99,102,241,0.25)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, pos.x, pos.y, w, h, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    // Header
+    const grad = ctx.createLinearGradient(pos.x, pos.y, pos.x + w, pos.y);
+    grad.addColorStop(0, 'rgba(99,102,241,0.3)');
+    grad.addColorStop(1, 'rgba(168,85,247,0.2)');
+    ctx.fillStyle = grad;
+    roundRectTop(ctx, pos.x, pos.y, w, 28, 8);
+    ctx.fill();
+
+    // Table name
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(tbl.name, pos.x + 10, pos.y + 19);
+
+    // Columns
+    tbl.columns.forEach((col, i) => {
+      const cy = pos.y + 30 + i * 22 + 14;
+      ctx.font = '11px "JetBrains Mono", monospace';
+      // PK icon
+      if (col.isPK) {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('🔑', pos.x + 6, cy);
+      }
+      // FK icon
+      if (col.fk) {
+        ctx.fillStyle = '#a855f7';
+        ctx.fillText('→', pos.x + (col.isPK ? 22 : 6), cy);
+      }
+      // Column name
+      ctx.fillStyle = col.isPK ? '#818cf8' : '#94a3b8';
+      ctx.fillText(col.name, pos.x + (col.isPK || col.fk ? 34 : 12), cy);
+      // Type
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(col.type, pos.x + w - 8, cy);
+      ctx.textAlign = 'left';
+    });
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function roundRectTop(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h); ctx.lineTo(x, y+h);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// ER Drag & Drop
+function initERDrag() {
+  const canvas = $('erCanvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    for (let i = state.tables.length - 1; i >= 0; i--) {
+      const tbl = state.tables[i];
+      const pos = state.erPositions[tbl.id];
+      if (!pos) continue;
+      const w = 220, h = 30 + tbl.columns.length * 22 + 8;
+      if (mx >= pos.x && mx <= pos.x+w && my >= pos.y && my <= pos.y+h) {
+        state.erDragging = tbl.id;
+        state.erOffset = { x: mx - pos.x, y: my - pos.y };
+        break;
+      }
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (!state.erDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    state.erPositions[state.erDragging] = {
+      x: mx - state.erOffset.x,
+      y: my - state.erOffset.y
+    };
+    renderER();
+  });
+
+  canvas.addEventListener('mouseup', () => { state.erDragging = null; });
+  canvas.addEventListener('mouseleave', () => { state.erDragging = null; });
+}
+
+function autoLayoutER() {
+  const count = state.tables.length;
+  if (count === 0) return;
+  const cols = Math.ceil(Math.sqrt(count));
+  const spacingX = 280, spacingY = 250;
+  state.tables.forEach((tbl, i) => {
+    state.erPositions[tbl.id] = {
+      x: 30 + (i % cols) * spacingX,
+      y: 30 + Math.floor(i / cols) * spacingY
+    };
+  });
+  renderER();
+}
+
+/* ══════════════════════════════════════════════
+   JOINS MANAGER
+   ══════════════════════════════════════════════ */
+
+function renderJoinsList() {
+  const container = $('joinsList');
+  container.innerHTML = '';
+  if (state.joins.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;font-style:italic;padding:8px">No relationships defined yet. Select tables above and click "Add Relationship".</p>';
+    return;
+  }
+  state.joins.forEach((join, i) => {
+    const card = document.createElement('div');
+    card.className = 'join-card animate-slide';
+    card.innerHTML = '<div class="join-text"><span>' + escHtml(join.table1) + '</span> <span class="join-kw">' +
+      escHtml(join.joinType) + '</span> <span>' + escHtml(join.table2) + '</span> ON ' +
+      escHtml(join.table1) + '.' + escHtml(join.key1) + ' = ' + escHtml(join.table2) + '.' + escHtml(join.key2) + '</div>';
+    const del = document.createElement('button');
+    del.className = 'btn-icon danger';
+    del.innerHTML = '<i class="fas fa-times"></i>';
+    del.addEventListener('click', () => { state.joins.splice(i, 1); renderJoinsList(); });
+    card.appendChild(del);
+    container.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   INITIALIZATION
+   ══════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Init tabs
+  initTabs('#mainTabs', 'tab-');
+  initTabs('#outputTabs', 'tab-output-');
+
+  // Init dialect selector
+  initDialectSelector();
+
+  // Wire pattern table → column links
+  wirePatternTableLinks();
+
+  // Add Table button
+  $('addTableBtn').addEventListener('click', addTable);
+
+  // Add Join button
+  $('addJoinBtn').addEventListener('click', () => {
+    const t1 = $('joinTable1').value;
+    const t2 = $('joinTable2').value;
+    const jt = $('joinType').value;
+    const k1 = $('joinKey1').value;
+    const k2 = $('joinKey2').value;
+    if (!t1 || !t2) { alert('Please select both tables.'); return; }
+    if (!k1 || !k2) { alert('Please select join keys for both tables.'); return; }
+    state.joins.push({ table1: t1, table2: t2, joinType: jt, key1: k1, key2: k2 });
+    renderJoinsList();
+  });
+
+  // Pattern card toggles
+  $$('.pattern-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.pattern-config') || e.target.closest('.btn')) return;
+      const configId = 'config-' + card.dataset.pattern;
+      const config = $(configId);
+      if (config) {
+        config.classList.toggle('visible');
+        populateTableSelects();
+      }
+    });
+  });
+
+  // Pattern generators
+  $('genCteBtn').addEventListener('click', () => {
+    const sql = generateRecursiveCTE();
+    if (sql) { setSQLOutput(sql); runAnalysis(); }
+  });
+  $('genWinBtn').addEventListener('click', () => {
+    const sql = generateWindowFunction();
+    if (sql) { setSQLOutput(sql); runAnalysis(); }
+  });
+  $('genLatBtn').addEventListener('click', () => {
+    const sql = generateLateralJoin();
+    if (sql) { setSQLOutput(sql); runAnalysis(); }
+  });
+  $('genUpsertBtn').addEventListener('click', () => {
+    const sql = generateUpsert();
+    if (sql) { setSQLOutput(sql); runAnalysis(); }
+  });
+
+  // Generate SQL
+  $('generateSqlBtn').addEventListener('click', () => {
+    if (state.tables.length === 0) {
+      setSQLOutput('-- No tables defined. Use the Schema Designer to add tables.');
+      return;
+    }
+    const sql = generateDDL();
+    setSQLOutput(sql);
+    runAnalysis();
+  });
+
+  // Copy SQL
+  $('copySqlBtn').addEventListener('click', () => {
+    const text = $('sqlOutput').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $('copySqlBtn');
+      btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+    });
+  });
+
+  // Download SQL
+  $('downloadSqlBtn').addEventListener('click', () => {
+    const text = $('sqlOutput').innerText;
+    if (!text || text.includes('will appear here')) { alert('Generate SQL first.'); return; }
+    const blob = new Blob([text], { type: 'text/sql' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'schema_' + state.dialect + '.sql';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  // Reset
+  $('resetAllBtn').addEventListener('click', () => {
+    if (!confirm('Reset all tables, joins, and generated SQL?')) return;
+    state.tables = []; state.joins = []; state.nextTableId = 1;
+    state.erPositions = {}; state.lastSQL = ''; state.lastSQLraw = '';
+    $('tablesContainer').innerHTML = '';
+    $('joinsList').innerHTML = '';
+    $('sqlOutput').innerHTML = '<span class="sql-cmt">-- Your SQL code will appear here...</span>';
+    $('lineNumbers').innerHTML = '1';
+    $('analysisContainer').innerHTML = '<div class="analysis-card"><h4><i class="fas fa-info-circle" style="color:var(--primary)"></i> Ready</h4><div class="analysis-item info">Generate SQL to see analysis.</div></div>';
+    populateTableSelects();
+  });
+
+  // Auto Layout ER
+  $('autoLayoutBtn').addEventListener('click', autoLayoutER);
+
+  // Init ER drag
+  initERDrag();
+
+  // Render initial joins
+  renderJoinsList();
+
+  // Add one table by default
+  addTable();
+});
+
+})();
+</script>
+</body>
+</html>
